@@ -1,23 +1,40 @@
 # REPO_CONTEXT
 
-## Objetivo
-Este repositorio implementa el **Portal de Socios** y debe seguir exactamente la misma arquitectura utilizada en `goool-front`.
+## Qué es este repositorio
 
-## Regla principal de arquitectura
-- Replicar estructura, convenciones, tooling, scripts y patrón de módulos de `goool-front`.
-- No introducir variaciones arquitectónicas propias en `goool-socios`.
+`goool-socios` es el portal de miembros de la plataforma Goool. Es una SPA React que consume exclusivamente la REST API de `goool-api`.
 
-## Diferencias permitidas respecto de `goool-front`
-Únicamente las que hacen al contexto del producto:
-- Identidad de aplicación: `goool-socios`.
-- Contenidos/etiquetas orientados a Portal de Socios.
-- Configuración específica del portal cuando corresponda.
+## Alcance
 
-## SDK
-La aplicación debe consumir la misma librería compartida:
-- `@goool/sdk`
+Este repositorio contiene:
 
-Mantener el mismo patrón de uso/inicialización que en `goool-front`.
+- Dashboard personal del socio
+- Gestión de grupos familiares
+- Administración de membresías y suscripciones
+- Historial de pagos
+- Carné de socio virtual
 
-## Alcance de archivos en este repositorio
-Generar y mantener únicamente archivos específicos de este repositorio (branding/configuración/contexto propios de Portal de Socios), evitando duplicar definiciones comunes que ya estén resueltas por la arquitectura base.
+## Fuera de alcance
+
+- Sitio web público (→ goool-front)
+- Administración de clubes (→ goool-clubes)
+- Administración de plataforma (→ goool-admin)
+- Lógica de negocio (→ goool-api)
+- Componentes reutilizables entre apps (→ goool-sdk)
+
+## API
+
+Todas las llamadas a la API usan el prefijo:
+
+```
+/api/socios/v1/
+```
+
+## Convenciones arquitectónicas
+
+1. SPA pura — sin SSR, sin Server Components, sin BFF.
+2. Comunicación exclusiva con `goool-api` vía REST JSON.
+3. Sin acceso directo a base de datos.
+4. Sin lógica de negocio; solo presentación y orquestación de llamadas.
+5. Consumir `@goool/sdk` para componentes, tipos y utilidades compartidas.
+6. Seguir la estructura de carpetas definida en `FOLDER_STRUCTURE.md`.

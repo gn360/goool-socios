@@ -1,38 +1,54 @@
 # goool-socios
 
-Portal de Socios de goool.
+Portal de socios de Goool.
 
-Este repositorio debe mantener la misma arquitectura de `goool-front`,
-reutilizando la misma integración con `@goool/sdk`.
+## Alcance
+
+- Dashboard personal del socio
+- Gestión de grupos familiares
+- Suscripciones y membresías
+- Historial de pagos
+- Carné de socio virtual
+
+## Stack
+
+- React 19
+- TypeScript 5.8
+- Vite 6
+- TailwindCSS 4
+- React Router 7
+- TanStack Query 5
+
+## Scripts
+
+| Comando | Descripción |
+|---|---|
+| `npm run dev` | Servidor de desarrollo (Vite) |
+| `npm run build` | Build de producción |
+| `npm run preview` | Preview del build |
+| `npm run typecheck` | Validación de tipos |
+
+## Variables de entorno
+
+Copiar `.env.example` a `.env` y ajustar:
+
+| Variable | Descripción |
+|---|---|
+| `VITE_API_BASE_URL` | URL base de la API (goool-api) |
 
 ## Docker
 
-> ⚠️ Este repositorio es un scaffold. La infraestructura Docker está lista para usar
-> una vez que se agregue el código fuente (`package.json`, `src/`, etc.).
-
-### Desarrollo
-
 ```bash
-# Requiere que goool-api esté corriendo primero (red compartida "goool")
+# Desarrollo
 docker compose -f docker-compose.dev.yml up
 
-# La app estará disponible en http://localhost:5174
-# Hot Module Replacement activo
+# Producción
+docker build -t goool-socios:latest .
+docker run -p 80:80 goool-socios:latest
 ```
 
-### Producción
+## SDK
 
-```bash
-docker compose -f docker-compose.prod.yml build
-docker compose -f docker-compose.prod.yml up -d
-```
+Este proyecto consume `@goool/sdk`. En desarrollo local se usa el protocolo `file:../goool-sdk`.
 
-### Arquitectura del contenedor
-
-```
-Desarrollo:  node:22-alpine → Vite Dev Server con HMR
-Producción:  Dockerfile multi-stage → Nginx (:80) sirviendo build estático
-```
-
-El contenedor de producción no expone puertos al host. Apache2 actúa como
-Reverse Proxy vía la red Docker `goool_prod`.
+Para builds Docker de producción, el SDK debe estar empaquetado como tarball o publicado en un registro privado.
