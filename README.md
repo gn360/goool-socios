@@ -52,3 +52,12 @@ docker run -p 80:80 goool-socios:latest
 Este proyecto consume `@goool/sdk`. En desarrollo local se usa el protocolo `file:../goool-sdk`.
 
 Para builds Docker de producción, el SDK debe estar empaquetado como tarball o publicado en un registro privado.
+
+## Documentación
+
+Documentación técnica completa de la plataforma en [goool-docs](../goool-docs/):
+
+- [Visión general de arquitectura](../goool-docs/architecture/overview.md)
+- [ADR — Decisiones arquitectónicas](../goool-docs/adr/)
+- [API — Convenciones](../goool-docs/api/conventions.md)
+- [Despliegue](../goool-docs/deployment/)

@@ -1,5 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
+import { AuthProvider } from '@goool/sdk';
+import { AUTH_CONFIG } from '@/config/auth';
 import type { ReactNode } from 'react';
 
 const queryClient = new QueryClient({
@@ -19,9 +21,11 @@ interface ProvidersProps {
 export function Providers({ children }: ProvidersProps) {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        {children}
-      </BrowserRouter>
+      <AuthProvider config={AUTH_CONFIG}>
+        <BrowserRouter>
+          {children}
+        </BrowserRouter>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

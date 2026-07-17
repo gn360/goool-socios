@@ -1,0 +1,33 @@
+# ─── Development — Vite Dev Server with HMR ───────────────────────
+
+services:
+  app:
+    image: node:22-alpine
+    container_name: goool-socios-dev
+    working_dir: /app
+    command: ["sh", "-c", "npm install && npm run dev"]
+
+    # Mount application source and SDK sibling for file: dependency resolution.
+    # The SDK symlink at node_modules/@goool/sdk → ../../goool-sdk
+    # resolves to /goool-sdk inside the container.
+    volumes:
+      - ../goool-socios:/app
+      - ../goool-sdk:/goool-sdk
+      - /app/node_modules
+
+    environment:
+      # Override for local dev — points to goool-api on the shared Docker network.
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://goool-api-nginx/api}
+
+    ports:
+      - "${SOCIOS_HOST_PORT:-5174}:5173"
+
+    networks:
+      - goool
+
+    restart: unless-stopped
+
+# Network is created by goool-infra/start-dev.sh
+networks:
+  goool:
+    external: true
