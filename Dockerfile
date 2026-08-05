@@ -3,10 +3,17 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Copy SDK source — required for file:../goool-sdk resolution in package.json.
-# npm resolves the relative path: /app/../goool-sdk → /goool-sdk.
-COPY goool-sdk/package.json goool-sdk/tsconfig.json goool-sdk/tsconfig.build.json /goool-sdk/
+# ── Build SDK first ──────────────────────────────────────────────
+# The SDK is a local package (file:../goool-sdk). Build it in-container
+# so its dist/ is available for the SPA's Vite build.
+COPY goool-sdk/package.json goool-sdk/package-lock.json goool-sdk/tsconfig.json goool-sdk/tsconfig.build.json /goool-sdk/
 COPY goool-sdk/src/ /goool-sdk/src/
+
+WORKDIR /goool-sdk
+RUN npm ci && npm run build
+
+# ── Build SPA ────────────────────────────────────────────────────
+WORKDIR /app
 
 # Install dependencies (npm ci resolves file:../goool-sdk → /goool-sdk)
 COPY goool-socios/package.json goool-socios/package-lock.json ./
