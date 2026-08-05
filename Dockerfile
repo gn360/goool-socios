@@ -7,6 +7,7 @@ WORKDIR /app
 # npm resolves the relative path: /app/../goool-sdk → /goool-sdk.
 COPY goool-sdk/package.json goool-sdk/tsconfig.json goool-sdk/tsconfig.build.json /goool-sdk/
 COPY goool-sdk/src/ /goool-sdk/src/
+COPY goool-sdk/dist/ /goool-sdk/dist/
 
 # Install dependencies (npm ci resolves file:../goool-sdk → /goool-sdk)
 COPY goool-socios/package.json goool-socios/package-lock.json ./
