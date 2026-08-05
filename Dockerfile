@@ -6,7 +6,7 @@ WORKDIR /app
 # ── Build SDK first ──────────────────────────────────────────────
 # The SDK is a local package (file:../goool-sdk). Build it in-container
 # so its dist/ is available for the SPA's Vite build.
-COPY goool-sdk/package.json goool-sdk/package-lock.json goool-sdk/tsconfig.json goool-sdk/tsconfig.build.json /goool-sdk/
+COPY goool-sdk/package.json goool-sdk/package-lock.json goool-sdk/tsconfig.json goool-sdk/tsconfig.build.json goool-sdk/vite.config.ts /goool-sdk/
 COPY goool-sdk/src/ /goool-sdk/src/
 
 WORKDIR /goool-sdk
