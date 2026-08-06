@@ -5,6 +5,7 @@ import { AuthLayout } from '@/layouts/AuthLayout';
 import { UnauthLayout } from '@/layouts/UnauthLayout';
 import { ErrorBoundary } from '@/app/components/ErrorBoundary';
 import { LoginPage, ForgotPasswordPage, DashboardPage, NotFoundPage } from '@/app';
+import { FamilyPage } from '@/app/features/family';
 
 export function Routes() {
   return (
@@ -26,7 +27,7 @@ export function Routes() {
             <Route path="/profile" element={<div />} />
             <Route path="/memberships" element={<div />} />
             <Route path="/payments" element={<div />} />
-            <Route path="/family" element={<div />} />
+            <Route path="/family" element={<FamilyPage />} />
           </Route>
         </Route>
 

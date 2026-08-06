@@ -4,11 +4,14 @@ Portal de socios de Goool.
 
 ## Alcance
 
-- Dashboard personal del socio
-- Gestión de grupos familiares
-- Suscripciones y membresías
-- Historial de pagos
-- Carné de socio virtual
+- ✅ Dashboard personal del socio con branding dinámico del club
+- ✅ Gestión de grupos familiares (activar/desactivar miembros)
+- ✅ Login con restricción de edad (<13 años) vía `auth_min_age`
+- ✅ Sidebar de navegación con acceso a Familia, Membresías, Pagos, Perfil
+- ✅ ThemeProvider integrado (colores del club en tiempo real)
+- ⬜ Suscripciones y membresías (próximamente)
+- ⬜ Historial de pagos (próximamente)
+- ⬜ Carné de socio virtual (próximamente)
 
 ## Stack
 

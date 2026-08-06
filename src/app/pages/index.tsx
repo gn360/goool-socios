@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
+import { useAuth, useTheme } from '@goool/sdk';
 import { LoginForm } from '@/app/features/auth/LoginForm';
 import { ForgotPasswordForm } from '@/app/features/auth/ForgotPasswordForm';
+import { useDashboard } from '@/shared/hooks/useDashboard';
 
 export function LoginPage() {
   return (
@@ -45,15 +47,107 @@ export function ForgotPasswordPage() {
 }
 
 export function DashboardPage() {
+  const { branding } = useTheme();
+  const { user } = useAuth();
+  const { data, isLoading, error } = useDashboard();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[40vh]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: 'var(--color-primary)' }} />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+        <p className="text-red-700 text-sm">Error al cargar el dashboard.</p>
+      </div>
+    );
+  }
+
+  const familyWidget = data?.widgets?.family;
+  const familyCount = familyWidget?.total ?? 0;
+  const activeCount = familyWidget?.active ?? 0;
+
+  const shortcuts = [
+    { id: 'family', label: 'Mi familia', path: '/family', icon: '👨‍👩‍👧‍👦', badge: familyCount > 0 ? `${activeCount}/${familyCount}` : null },
+    { id: 'memberships', label: 'Mis membresías', path: '/memberships', icon: '🪪' },
+    { id: 'payments', label: 'Mis pagos', path: '/payments', icon: '💳' },
+    { id: 'profile', label: 'Mi perfil', path: '/profile', icon: '👤' },
+  ];
+
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+      {/* Welcome */}
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">
+          {user ? `¡Hola, ${user.name}!` : 'Dashboard'}
+        </h1>
+        {familyCount > 0 && (
+          <p className="text-sm text-gray-500 mt-1">
+            {familyCount} {familyCount === 1 ? 'miembro' : 'miembros'} en tu grupo familiar
+          </p>
+        )}
+      </div>
 
-      <div className="bg-white border border-dashed border-gray-300 rounded-xl p-12 text-center">
-        <p className="text-sm text-gray-500">Tu dashboard personalizado estará disponible próximamente.</p>
-        <p className="text-xs text-gray-400 mt-1">
-          Estamos preparando la experiencia para socios.
-        </p>
+      {/* Club branding banner */}
+      {branding && (
+        <div
+          className="rounded-xl p-6 text-white"
+          style={{ backgroundColor: 'var(--color-primary)' }}
+        >
+          <div className="flex items-center gap-4">
+            {branding.logo && (
+              <img
+                src={branding.logo}
+                alt="Logo del club"
+                className="h-16 w-16 rounded-xl object-cover bg-white/10 p-1"
+              />
+            )}
+            <div>
+              <h2
+                className="text-xl font-bold"
+                style={{ color: 'var(--color-primary-text)' }}
+              >
+                Tu club
+              </h2>
+              <p
+                className="text-sm mt-1 opacity-80"
+                style={{ color: 'var(--color-primary-text)' }}
+              >
+                Bienvenido al portal de socios
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Shortcuts */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {shortcuts.map((shortcut) => (
+          <Link
+            key={shortcut.id}
+            to={shortcut.path}
+            className="bg-white border border-gray-200 rounded-xl p-5 hover:border-[var(--color-primary)] hover:shadow-sm transition-all flex items-center gap-4"
+          >
+            <span className="text-2xl">{shortcut.icon}</span>
+            <div className="flex-1">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-gray-900">{shortcut.label}</h3>
+                {shortcut.badge && (
+                  <span className="text-xs font-medium px-2 py-0.5 rounded-full" style={{ backgroundColor: 'var(--color-primary)', color: 'var(--color-primary-text)' }}>
+                    {shortcut.badge}
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-gray-500 mt-0.5">
+                Gestionar {shortcut.label.toLowerCase()}
+              </p>
+            </div>
+          </Link>
+        ))}
       </div>
     </div>
   );

@@ -1,7 +1,16 @@
+import { useMemo } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
-import { AuthProvider } from '@goool/sdk';
+import {
+  AuthProvider,
+  ThemeProvider,
+  createAuthApiClient,
+  TokenManager,
+  LocalStorageAuthStorage,
+} from '@goool/sdk';
+import { SociosProvider } from './SociosProvider';
 import { AUTH_CONFIG } from '@/config/auth';
+import { apiConfig } from '@/config/api';
 import type { ReactNode } from 'react';
 
 const queryClient = new QueryClient({
@@ -19,12 +28,30 @@ interface ProvidersProps {
 }
 
 export function Providers({ children }: ProvidersProps) {
+  // Shared client for SDK API services (ThemeProvider, etc.)
+  const apiClient = useMemo(() => {
+    const storage = new LocalStorageAuthStorage();
+    const tokenManager = new TokenManager(
+      storage,
+      AUTH_CONFIG.tokenKey ?? 'goool_auth_token',
+    );
+
+    return createAuthApiClient({
+      baseURL: apiConfig.baseURL,
+      tokenManager,
+    });
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider config={AUTH_CONFIG}>
-        <BrowserRouter>
-          {children}
-        </BrowserRouter>
+        <ThemeProvider client={apiClient}>
+          <SociosProvider>
+            <BrowserRouter>
+              {children}
+            </BrowserRouter>
+          </SociosProvider>
+        </ThemeProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
