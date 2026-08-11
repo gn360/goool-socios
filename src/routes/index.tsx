@@ -6,6 +6,8 @@ import { UnauthLayout } from '@/layouts/UnauthLayout';
 import { ErrorBoundary } from '@/app/components/ErrorBoundary';
 import { LoginPage, ForgotPasswordPage, DashboardPage, NotFoundPage } from '@/app';
 import { FamilyPage } from '@/app/features/family';
+import { PaymentMethodsPage, PaymentHistoryPage, InvoiceListPage, RecurringPaymentsPage } from '@/app/features/payments';
+import { CheckoutPage, ConfirmationPage } from '@/app/features/payments';
 
 export function Routes() {
   return (
@@ -26,7 +28,12 @@ export function Routes() {
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/profile" element={<div />} />
             <Route path="/memberships" element={<div />} />
-            <Route path="/payments" element={<div />} />
+            <Route path="/payments" element={<PaymentHistoryPage />} />
+            <Route path="/payment-methods" element={<PaymentMethodsPage />} />
+            <Route path="/invoices" element={<InvoiceListPage />} />
+            <Route path="/recurring-payments" element={<RecurringPaymentsPage />} />
+            <Route path="/checkout" element={<CheckoutPage />} />
+            <Route path="/payment/confirmation" element={<ConfirmationPage />} />
             <Route path="/family" element={<FamilyPage />} />
           </Route>
         </Route>
