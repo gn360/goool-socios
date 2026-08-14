@@ -11,6 +11,7 @@ export interface FamilyMember {
   email: string | null;
   birth_date: string | null;
   is_leader: boolean;
+  age_restricted?: boolean;
 }
 
 // ── Keys ─────────────────────────────────────────────────

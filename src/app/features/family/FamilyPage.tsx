@@ -1,8 +1,6 @@
 import { useFamily, useToggleMember, type FamilyMember } from '@/shared/hooks/useFamily';
-import { useAuth } from '@goool/sdk';
 
 export function FamilyPage() {
-  const { user } = useAuth();
   const { data: members, isLoading, error } = useFamily();
   const toggleMember = useToggleMember();
 
@@ -17,7 +15,7 @@ export function FamilyPage() {
   if (error) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
-        <p className="text-red-700 text-sm">Error al cargar el grupo familiar.</p>
+        <p className="text-red-700 text-sm">Error al cargar el grupo.</p>
       </div>
     );
   }
@@ -29,9 +27,9 @@ export function FamilyPage() {
     <div className="max-w-3xl mx-auto space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Mi familia</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Mi grupo</h1>
         <p className="text-sm text-gray-500 mt-1">
-          Gestioná los accesos de los miembros de tu grupo familiar.
+          Gestioná los accesos de los miembros de tu grupo.
         </p>
       </div>
 
@@ -40,7 +38,7 @@ export function FamilyPage() {
         <div className="bg-white rounded-xl border border-gray-200 p-5">
           <div className="flex items-center gap-3 mb-2">
             <span className="text-xs font-semibold uppercase tracking-wide text-white px-2 py-0.5 rounded-full" style={{ backgroundColor: 'var(--color-primary)' }}>
-              Titular
+              Líder del grupo
             </span>
           </div>
           <MemberInfo member={leader} />
@@ -51,7 +49,7 @@ export function FamilyPage() {
       {dependents.length > 0 ? (
         <div className="space-y-3">
           <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
-            Dependientes ({dependents.length})
+            Miembros ({dependents.length})
           </h2>
           {dependents.map((member) => (
             <MemberCard
@@ -64,7 +62,7 @@ export function FamilyPage() {
         </div>
       ) : (
         <div className="bg-white border border-dashed border-gray-300 rounded-xl p-8 text-center">
-          <p className="text-sm text-gray-500">No hay miembros dependientes en tu grupo familiar.</p>
+          <p className="text-sm text-gray-500">No hay miembros en tu grupo.</p>
           <p className="text-xs text-gray-400 mt-1">
             Los nuevos miembros se agregan mediante invitación desde el panel del club.
           </p>
@@ -132,6 +130,20 @@ function MemberInfo({ member }: { member: FamilyMember }) {
           </>
         )}
       </div>
+      {(member.status === 'inactive' || member.age_restricted) && (
+        <div className="flex items-center gap-2 mt-1">
+          {member.status === 'inactive' && (
+            <span className="text-xs font-medium text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full">
+              Inactivo
+            </span>
+          )}
+          {member.age_restricted && (
+            <span className="text-xs font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">
+              Acceso restringido por edad
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 }

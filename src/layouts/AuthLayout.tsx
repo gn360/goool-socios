@@ -3,10 +3,11 @@ import { Outlet, NavLink } from 'react-router-dom';
 import { useAuth, useTheme } from '@goool/sdk';
 import { Button } from '@goool/sdk';
 import { LogOut, Menu, X, LayoutDashboard, Users, CreditCard, Receipt, User } from 'lucide-react';
+import { APP_NAME } from '@/config/app';
 
 const NAV_ITEMS = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/family', label: 'Mi familia', icon: Users },
+  { to: '/family', label: 'Mi grupo', icon: Users },
   { to: '/memberships', label: 'Membresías', icon: CreditCard },
   { to: '/payments', label: 'Pagos', icon: Receipt },
   { to: '/profile', label: 'Mi perfil', icon: User },
@@ -17,7 +18,7 @@ export function AuthLayout() {
   const { branding } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const clubName = branding?.logo ? undefined : 'Goool Socios';
+  const clubName = branding?.logo ? undefined : APP_NAME;
 
   const handleLogout = async () => {
     await logout();
@@ -33,7 +34,7 @@ export function AuthLayout() {
       >
         <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
           <span className="text-lg font-bold" style={{ color: 'var(--color-primary)' }}>
-            Goool Socios
+            {APP_NAME}
           </span>
           <button
             onClick={() => setSidebarOpen(false)}
@@ -138,7 +139,7 @@ export function AuthLayout() {
 
       <footer className="bg-white border-t border-gray-200 py-4">
         <div className="px-4 sm:px-6 lg:px-8 text-center text-sm text-gray-500">
-          &copy; {new Date().getFullYear()} Goool Socios. Todos los derechos reservados.
+          &copy; {new Date().getFullYear()} {APP_NAME}. Todos los derechos reservados.
         </div>
       </footer>
       </div>

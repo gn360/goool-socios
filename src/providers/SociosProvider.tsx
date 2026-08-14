@@ -7,7 +7,6 @@ import {
 import type { AxiosInstance } from 'axios';
 import {
   createAuthApiClient,
-  ClubApiService,
   TokenManager,
   LocalStorageAuthStorage,
 } from '@goool/sdk';
@@ -18,7 +17,6 @@ import { AUTH_CONFIG } from '@/config/auth';
 
 interface SociosServices {
   client: AxiosInstance;
-  club: ClubApiService;
 }
 
 const ServicesContext = createContext<SociosServices | null>(null);
@@ -30,7 +28,7 @@ interface SociosProviderProps {
 }
 
 /**
- * Provides ClubApiService and raw Axios client for the member portal.
+ * Provides the raw Axios client for the member portal.
  * Must be nested inside AuthProvider (for token access).
  */
 export function SociosProvider({ children }: SociosProviderProps) {
@@ -46,10 +44,7 @@ export function SociosProvider({ children }: SociosProviderProps) {
       tokenManager,
     });
 
-    return {
-      client,
-      club: new ClubApiService(client),
-    };
+    return { client };
   }, []);
 
   return (
@@ -69,10 +64,6 @@ function useServices(): SociosServices {
   }
 
   return ctx;
-}
-
-export function useClubService(): ClubApiService {
-  return useServices().club;
 }
 
 export function useSociosApi(): { client: AxiosInstance } {

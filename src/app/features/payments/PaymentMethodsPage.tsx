@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { getPaymentMethods, PaymentMethodCard } from '@goool/sdk';
+import { PaymentMethodCard } from '@goool/sdk';
 import { useSociosApi } from '@/providers/SociosProvider';
+import { getPaymentMethods } from './api';
 
 export function PaymentMethodsPage() {
   const { client } = useSociosApi();
   const { data: methods, isLoading, refetch } = useQuery({
     queryKey: ['payment-methods'],
-    queryFn: getPaymentMethods,
+    queryFn: () => getPaymentMethods(client),
   });
 
   const removeMutation = useMutation({

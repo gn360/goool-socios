@@ -72,7 +72,7 @@ export function DashboardPage() {
   const activeCount = familyWidget?.active ?? 0;
 
   const shortcuts = [
-    { id: 'family', label: 'Mi familia', path: '/family', icon: '👨‍👩‍👧‍👦', badge: familyCount > 0 ? `${activeCount}/${familyCount}` : null },
+    { id: 'family', label: 'Mi grupo', path: '/family', icon: '👨‍👩‍👧‍👦', badge: familyCount > 0 ? `${activeCount}/${familyCount}` : null },
     { id: 'memberships', label: 'Mis membresías', path: '/memberships', icon: '🪪' },
     { id: 'payments', label: 'Mis pagos', path: '/payments', icon: '💳' },
     { id: 'profile', label: 'Mi perfil', path: '/profile', icon: '👤' },
@@ -87,7 +87,7 @@ export function DashboardPage() {
         </h1>
         {familyCount > 0 && (
           <p className="text-sm text-gray-500 mt-1">
-            {familyCount} {familyCount === 1 ? 'miembro' : 'miembros'} en tu grupo familiar
+            {familyCount} {familyCount === 1 ? 'miembro' : 'miembros'} en tu grupo
           </p>
         )}
       </div>

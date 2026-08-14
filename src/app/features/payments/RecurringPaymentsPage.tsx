@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
+import type { AxiosInstance } from 'axios';
 import type { RecurringPaymentDTO, PaymentMethodDTO } from '@goool/sdk';
 import { useSociosApi } from '@/providers/SociosProvider';
 
@@ -66,7 +67,7 @@ export function RecurringPaymentsPage() {
   );
 }
 
-function CreateRecurringForm({ client, onSuccess }: { client: any; onSuccess: () => void }) {
+function CreateRecurringForm({ client, onSuccess }: { client: AxiosInstance; onSuccess: () => void }) {
   const { data: methods } = useQuery({
     queryKey: ['payment-methods'],
     queryFn: async () => { const res = await client.get<{ data: PaymentMethodDTO[] }>('/socios/v1/payment-methods'); return res.data.data; },

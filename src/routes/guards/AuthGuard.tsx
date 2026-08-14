@@ -8,7 +8,7 @@ export function AuthGuard() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Spinner size="lg" color="#0086CD" />
+        <Spinner size="lg" />
       </div>
     );
   }

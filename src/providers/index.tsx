@@ -1,9 +1,10 @@
-import { useMemo } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
+import { useEffect, useMemo } from 'react';
 import {
   AuthProvider,
   ThemeProvider,
+  subscribeAuthEvents,
   createAuthApiClient,
   TokenManager,
   LocalStorageAuthStorage,
@@ -28,7 +29,6 @@ interface ProvidersProps {
 }
 
 export function Providers({ children }: ProvidersProps) {
-  // Shared client for SDK API services (ThemeProvider, etc.)
   const apiClient = useMemo(() => {
     const storage = new LocalStorageAuthStorage();
     const tokenManager = new TokenManager(
@@ -42,10 +42,18 @@ export function Providers({ children }: ProvidersProps) {
     });
   }, []);
 
+  // Drop cached API data whenever the session changes (login/logout) so the
+  // next user never sees the previous session's responses.
+  useEffect(() => {
+    return subscribeAuthEvents(() => {
+      queryClient.clear();
+    });
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider config={AUTH_CONFIG}>
-        <ThemeProvider client={apiClient}>
+        <ThemeProvider client={apiClient} application="socios">
           <SociosProvider>
             <BrowserRouter>
               {children}
