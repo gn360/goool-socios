@@ -1,17 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { PaymentStatusBadge, PaymentAmount } from '@goool/sdk';
-import type { PaymentAttemptDTO } from '@goool/sdk';
 import { useSociosApi } from '@/providers/SociosProvider';
 
 export function PaymentHistoryPage() {
-  const { client } = useSociosApi();
+  const { payments } = useSociosApi();
 
   const { data, isLoading } = useQuery({
     queryKey: ['payment-attempts'],
-    queryFn: async () => {
-      const res = await client.get<{ data: PaymentAttemptDTO[] }>('/socios/v1/payment-attempts');
-      return res.data.data;
-    },
+    queryFn: () => payments.listPaymentAttempts(),
   });
 
   if (isLoading) {

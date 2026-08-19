@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useAuth, useTheme } from '@goool/sdk';
 import { LoginForm } from '@/app/features/auth/LoginForm';
 import { ForgotPasswordForm } from '@/app/features/auth/ForgotPasswordForm';
+import { ResetPasswordForm } from '@/app/features/auth/ResetPasswordForm';
 import { useDashboard } from '@/shared/hooks/useDashboard';
 
 export function LoginPage() {
@@ -42,6 +43,21 @@ export function ForgotPasswordPage() {
           Volver al inicio de sesión
         </Link>
       </div>
+    </div>
+  );
+}
+
+export function ResetPasswordPage() {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900">Restablecer contraseña</h2>
+        <p className="text-sm text-gray-500 mt-1">
+          Ingresá tu nueva contraseña para continuar.
+        </p>
+      </div>
+
+      <ResetPasswordForm />
     </div>
   );
 }

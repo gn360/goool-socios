@@ -1,22 +1,17 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import type { AxiosInstance } from 'axios';
-import type { RecurringPaymentDTO, PaymentMethodDTO } from '@goool/sdk';
 import { useSociosApi } from '@/providers/SociosProvider';
 
 export function RecurringPaymentsPage() {
-  const { client } = useSociosApi();
+  const { payments } = useSociosApi();
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['recurring-payments'],
-    queryFn: async () => {
-      const res = await client.get<{ data: RecurringPaymentDTO[] }>('/socios/v1/recurring-payments');
-      return res.data.data;
-    },
+    queryFn: () => payments.listRecurringPayments(),
   });
 
   const cancelMutation = useMutation({
-    mutationFn: (id: number) => client.delete(`/socios/v1/recurring-payments/${id}`),
+    mutationFn: (id: number) => payments.deleteRecurringPayment(id),
     onSuccess: () => refetch(),
   });
 
@@ -39,7 +34,7 @@ export function RecurringPaymentsPage() {
         </div>
         <button onClick={() => setShowForm(!showForm)} className="px-4 py-2 text-sm font-medium rounded-lg text-white" style={{ backgroundColor: 'var(--color-primary)' }}>{showForm ? 'Cancelar' : '+ Configurar'}</button>
       </div>
-      {showForm && <CreateRecurringForm client={client} onSuccess={() => { setShowForm(false); refetch(); }} />}
+      {showForm && <CreateRecurringForm onSuccess={() => { setShowForm(false); refetch(); }} />}
       {!data?.length ? (
         <div className="bg-white border border-dashed border-gray-300 rounded-xl p-12 text-center">
           <p className="text-gray-500">No tenés pagos automáticos configurados.</p>
@@ -67,18 +62,25 @@ export function RecurringPaymentsPage() {
   );
 }
 
-function CreateRecurringForm({ client, onSuccess }: { client: AxiosInstance; onSuccess: () => void }) {
+function CreateRecurringForm({ onSuccess }: { onSuccess: () => void }) {
+  const { payments } = useSociosApi();
   const { data: methods } = useQuery({
     queryKey: ['payment-methods'],
-    queryFn: async () => { const res = await client.get<{ data: PaymentMethodDTO[] }>('/socios/v1/payment-methods'); return res.data.data; },
+    queryFn: () => payments.listPaymentMethods(),
   });
   const [form, setForm] = useState({ payment_method_id: '', membership_id: '', frequency: 'monthly' });
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); setSubmitting(true);
-    try { await client.post('/socios/v1/recurring-payments', form); onSuccess(); }
-    finally { setSubmitting(false); }
+    try {
+      await payments.createRecurringPayment({
+        payment_method_id: form.payment_method_id,
+        membership_id: form.membership_id,
+        frequency: form.frequency as 'monthly' | 'quarterly' | 'semester' | 'yearly',
+      });
+      onSuccess();
+    } finally { setSubmitting(false); }
   };
 
   return (

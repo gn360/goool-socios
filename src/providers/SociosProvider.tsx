@@ -7,6 +7,7 @@ import {
 import type { AxiosInstance } from 'axios';
 import {
   createAuthApiClient,
+  PaymentApiService,
   TokenManager,
   LocalStorageAuthStorage,
 } from '@goool/sdk';
@@ -17,6 +18,7 @@ import { AUTH_CONFIG } from '@/config/auth';
 
 interface SociosServices {
   client: AxiosInstance;
+  payments: PaymentApiService;
 }
 
 const ServicesContext = createContext<SociosServices | null>(null);
@@ -28,8 +30,8 @@ interface SociosProviderProps {
 }
 
 /**
- * Provides the raw Axios client for the member portal.
- * Must be nested inside AuthProvider (for token access).
+ * Provides the raw Axios client plus the SDK API services for the member
+ * portal. Must be nested inside AuthProvider (for token access).
  */
 export function SociosProvider({ children }: SociosProviderProps) {
   const services = useMemo(() => {
@@ -44,7 +46,9 @@ export function SociosProvider({ children }: SociosProviderProps) {
       tokenManager,
     });
 
-    return { client };
+    const payments = new PaymentApiService(client, 'socios');
+
+    return { client, payments };
   }, []);
 
   return (
@@ -66,6 +70,8 @@ function useServices(): SociosServices {
   return ctx;
 }
 
-export function useSociosApi(): { client: AxiosInstance } {
-  return { client: useServices().client };
+export function useSociosApi(): { client: AxiosInstance; payments: PaymentApiService } {
+  const services = useServices();
+
+  return { client: services.client, payments: services.payments };
 }

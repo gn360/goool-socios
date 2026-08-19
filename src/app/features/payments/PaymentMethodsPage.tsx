@@ -1,23 +1,22 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { PaymentMethodCard } from '@goool/sdk';
+import { PaymentMethodCard, type CreatePaymentMethodInput } from '@goool/sdk';
 import { useSociosApi } from '@/providers/SociosProvider';
-import { getPaymentMethods } from './api';
 
 export function PaymentMethodsPage() {
-  const { client } = useSociosApi();
+  const { payments } = useSociosApi();
   const { data: methods, isLoading, refetch } = useQuery({
     queryKey: ['payment-methods'],
-    queryFn: () => getPaymentMethods(client),
+    queryFn: () => payments.listPaymentMethods(),
   });
 
   const removeMutation = useMutation({
-    mutationFn: (id: number) => client.delete(`/socios/v1/payment-methods/${id}`),
+    mutationFn: (id: number) => payments.deletePaymentMethod(id),
     onSuccess: () => refetch(),
   });
 
   const setDefaultMutation = useMutation({
-    mutationFn: (id: number) => client.patch(`/socios/v1/payment-methods/${id}/default`),
+    mutationFn: (id: number) => payments.setDefaultPaymentMethod(id),
     onSuccess: () => refetch(),
   });
 
@@ -47,7 +46,7 @@ export function PaymentMethodsPage() {
         </button>
       </div>
 
-      {showAddForm && <AddCardForm client={client} onSuccess={() => { setShowAddForm(false); refetch(); }} />}
+      {showAddForm && <AddCardForm onSuccess={() => { setShowAddForm(false); refetch(); }} />}
 
       {!methods?.length ? (
         <div className="bg-white border border-dashed border-gray-300 rounded-xl p-12 text-center">
@@ -74,15 +73,16 @@ export function PaymentMethodsPage() {
   );
 }
 
-function AddCardForm({ client, onSuccess }: { client: any; onSuccess: () => void }) {
-  const [form, setForm] = useState({ card_number: '', card_holder: '', expiration_month: '', expiration_year: '', cvv: '' });
+function AddCardForm({ onSuccess }: { onSuccess: () => void }) {
+  const { payments } = useSociosApi();
+  const [form, setForm] = useState<CreatePaymentMethodInput>({ card_number: '', card_holder: '', expiration_month: '', expiration_year: '', cvv: '' });
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await client.post('/socios/v1/payment-methods', form);
+      await payments.createPaymentMethod(form);
       onSuccess();
     } finally { setSubmitting(false); }
   };

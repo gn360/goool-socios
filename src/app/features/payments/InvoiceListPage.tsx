@@ -1,17 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import { PaymentAmount } from '@goool/sdk';
-import type { InvoiceDTO } from '@goool/sdk';
 import { useSociosApi } from '@/providers/SociosProvider';
 
 export function InvoiceListPage() {
-  const { client } = useSociosApi();
+  const { payments } = useSociosApi();
 
   const { data, isLoading } = useQuery({
     queryKey: ['invoices'],
-    queryFn: async () => {
-      const res = await client.get<{ data: InvoiceDTO[] }>('/socios/v1/invoices');
-      return res.data.data;
-    },
+    queryFn: () => payments.listInvoices(),
   });
 
   if (isLoading) {
