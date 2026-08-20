@@ -1,5 +1,8 @@
 import { Link } from 'react-router-dom';
+import type { ReactNode } from 'react';
 import { useAuth, useTheme } from '@goool/sdk';
+import type { LucideIcon } from 'lucide-react';
+import { User, Mail, Phone, CalendarDays, ShieldCheck, BadgeCheck } from 'lucide-react';
 import { LoginForm } from '@/app/features/auth/LoginForm';
 import { ForgotPasswordForm } from '@/app/features/auth/ForgotPasswordForm';
 import { ResetPasswordForm } from '@/app/features/auth/ResetPasswordForm';
@@ -164,6 +167,113 @@ export function DashboardPage() {
             </div>
           </Link>
         ))}
+      </div>
+    </div>
+  );
+}
+
+export function ProfilePage() {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading || !user) {
+    return (
+      <div className="flex justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: 'var(--color-primary)' }} />
+      </div>
+    );
+  }
+
+  const initials = `${user.name.charAt(0)}${user.last_name ? user.last_name.charAt(0) : ''}`.toUpperCase();
+
+  const memberSince = new Date(user.created_at).toLocaleDateString('es-AR', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+
+  const statusConfig = {
+    active: { label: 'Activo', className: 'bg-green-100 text-green-700' },
+    inactive: { label: 'Inactivo', className: 'bg-gray-100 text-gray-600' },
+    suspended: { label: 'Suspendido', className: 'bg-red-100 text-red-700' },
+  } as const;
+
+  const status = statusConfig[user.status];
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">Mi perfil</h1>
+        <p className="text-sm text-gray-500 mt-1">Tus datos personales y de cuenta</p>
+      </div>
+
+      {/* Identity card */}
+      <div className="bg-white border border-gray-200 rounded-xl p-6 flex items-center gap-4">
+        {user.avatar ? (
+          <img src={user.avatar} alt="Avatar" className="h-16 w-16 rounded-full object-cover" />
+        ) : (
+          <div
+            className="h-16 w-16 rounded-full flex items-center justify-center text-xl font-bold text-white shrink-0"
+            style={{ backgroundColor: 'var(--color-primary)' }}
+          >
+            {initials}
+          </div>
+        )}
+        <div className="min-w-0">
+          <h2 className="text-lg font-semibold text-gray-900 truncate">
+            {user.name} {user.last_name}
+          </h2>
+          <p className="text-sm text-gray-500 truncate">{user.email}</p>
+          <span className={`inline-block mt-2 text-xs font-medium px-2 py-0.5 rounded-full ${status.className}`}>
+            {status.label}
+          </span>
+        </div>
+      </div>
+
+      {/* Personal data */}
+      <section className="bg-white border border-gray-200 rounded-xl p-6">
+        <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Datos personales</h3>
+        <dl className="mt-4 space-y-4">
+          <ProfileField icon={User} label="Nombre">
+            {user.name}
+          </ProfileField>
+          <ProfileField icon={User} label="Apellido">
+            {user.last_name}
+          </ProfileField>
+          <ProfileField icon={Mail} label="Email">
+            {user.email}
+          </ProfileField>
+          <ProfileField icon={Phone} label="Teléfono">
+            {user.phone ?? '—'}
+          </ProfileField>
+        </dl>
+      </section>
+
+      {/* Account */}
+      <section className="bg-white border border-gray-200 rounded-xl p-6">
+        <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Cuenta</h3>
+        <dl className="mt-4 space-y-4">
+          <ProfileField icon={BadgeCheck} label="Verificación de email">
+            {user.email_verified_at ? 'Verificado' : 'Pendiente de verificación'}
+          </ProfileField>
+          <ProfileField icon={CalendarDays} label="Miembro desde">
+            {memberSince}
+          </ProfileField>
+          <ProfileField icon={ShieldCheck} label="Estado de la cuenta">
+            {status.label}
+          </ProfileField>
+        </dl>
+      </section>
+    </div>
+  );
+}
+
+function ProfileField({ icon: Icon, label, children }: { icon: LucideIcon; label: string; children: ReactNode }) {
+  return (
+    <div className="flex items-start gap-3">
+      <Icon className="w-5 h-5 mt-0.5 shrink-0" style={{ color: 'var(--color-primary)' }} />
+      <div className="flex-1 min-w-0">
+        <dt className="text-xs text-gray-500">{label}</dt>
+        <dd className="text-sm font-medium text-gray-900 mt-0.5 break-words">{children}</dd>
       </div>
     </div>
   );

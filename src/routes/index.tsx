@@ -4,7 +4,7 @@ import { AuthGuard } from '@/routes/guards/AuthGuard';
 import { AuthLayout } from '@/layouts/AuthLayout';
 import { UnauthLayout } from '@/layouts/UnauthLayout';
 import { ErrorBoundary } from '@goool/sdk';
-import { LoginPage, ForgotPasswordPage, ResetPasswordPage, DashboardPage, NotFoundPage } from '@/app';
+import { LoginPage, ForgotPasswordPage, ResetPasswordPage, DashboardPage, ProfilePage, NotFoundPage } from '@/app';
 import { FamilyPage } from '@/app/features/family';
 import { PaymentMethodsPage, PaymentHistoryPage, InvoiceListPage, RecurringPaymentsPage } from '@/app/features/payments';
 import { CheckoutPage, ConfirmationPage } from '@/app/features/payments';
@@ -28,7 +28,7 @@ export function Routes() {
           <Route element={<AuthLayout />}>
             <Route path="/" element={<DashboardPage />} />
             <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/profile" element={<div />} />
+            <Route path="/profile" element={<ProfilePage />} />
             <Route path="/memberships" element={<MembershipPage />} />
             <Route path="/payments" element={<PaymentHistoryPage />} />
             <Route path="/payment-methods" element={<PaymentMethodsPage />} />
