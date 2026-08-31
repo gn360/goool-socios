@@ -1,16 +1,28 @@
-import { Link } from 'react-router-dom';
 import type { ReactNode } from 'react';
-import { useAuth, useTheme } from '@goool/sdk';
+import { Link, useLocation } from 'react-router-dom';
+import { useAuth, useTheme, useSociosDashboard, PaymentAmount } from '@goool/sdk';
 import type { LucideIcon } from 'lucide-react';
-import { User, Mail, Phone, CalendarDays, ShieldCheck, BadgeCheck } from 'lucide-react';
+import { Users, CreditCard, Receipt, CalendarDays } from 'lucide-react';
 import { LoginForm } from '@/app/features/auth/LoginForm';
 import { ForgotPasswordForm } from '@/app/features/auth/ForgotPasswordForm';
 import { ResetPasswordForm } from '@/app/features/auth/ResetPasswordForm';
-import { useDashboard } from '@/shared/hooks/useDashboard';
+import { useSociosApi } from '@/providers/SociosProvider';
 
 export function LoginPage() {
+  const location = useLocation();
+  const passwordChanged = (location.state as { passwordChanged?: boolean } | null)?.passwordChanged;
+
   return (
     <div className="space-y-6">
+      {passwordChanged && (
+        <div className="bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl px-4 py-3 flex items-start gap-2">
+          <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+          <span>Contraseña actualizada. Volvé a iniciar sesión con tu nueva contraseña.</span>
+        </div>
+      )}
+
       <div>
         <h2 className="text-2xl font-bold text-gray-900">Iniciar sesión</h2>
         <p className="text-sm text-gray-500 mt-1">
@@ -68,7 +80,8 @@ export function ResetPasswordPage() {
 export function DashboardPage() {
   const { branding } = useTheme();
   const { user } = useAuth();
-  const { data, isLoading, error } = useDashboard();
+  const { client } = useSociosApi();
+  const { data, isLoading, error } = useSociosDashboard(client, 'socios');
 
   if (isLoading) {
     return (
@@ -86,15 +99,20 @@ export function DashboardPage() {
     );
   }
 
-  const familyWidget = data?.widgets?.family;
-  const familyCount = familyWidget?.total ?? 0;
-  const activeCount = familyWidget?.active ?? 0;
+  const family = data?.widgets.family;
+  const membership = data?.widgets.membership.membership;
+  const payments = data?.widgets.payments;
+  const nextCharge = data?.widgets.next_charge.charge;
+
+  const familyCount = family?.total ?? 0;
+  const activeCount = family?.active ?? 0;
+  const failedRecent = payments?.failed_recent ?? 0;
 
   const shortcuts = [
     { id: 'family', label: 'Mi grupo', path: '/family', icon: '👨‍👩‍👧‍👦', badge: familyCount > 0 ? `${activeCount}/${familyCount}` : null },
-    { id: 'memberships', label: 'Mis membresías', path: '/memberships', icon: '🪪' },
-    { id: 'payments', label: 'Mis pagos', path: '/payments', icon: '💳' },
-    { id: 'profile', label: 'Mi perfil', path: '/profile', icon: '👤' },
+    { id: 'memberships', label: 'Mis membresías', path: '/memberships', icon: '🪪', badge: membership ? membershipStatusLabel(membership.status) : null },
+    { id: 'payments', label: 'Mis pagos', path: '/payments', icon: '💳', badge: failedRecent > 0 ? `${failedRecent} fallidos` : null },
+    { id: 'profile', label: 'Mi perfil', path: '/profile', icon: '👤', badge: null },
   ];
 
   return (
@@ -143,6 +161,107 @@ export function DashboardPage() {
         </div>
       )}
 
+      {/* Widgets */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <DashboardWidgetCard
+          title="Mi grupo"
+          icon={Users}
+          footer={
+            <Link to="/family" className="text-sm font-medium hover:underline" style={{ color: 'var(--color-primary)' }}>
+              Gestionar grupo
+            </Link>
+          }
+        >
+          {familyCount > 0 ? (
+            <p className="text-sm text-gray-600">
+              {familyCount} {familyCount === 1 ? 'miembro' : 'miembros'} · {activeCount} {activeCount === 1 ? 'activo' : 'activos'}
+            </p>
+          ) : (
+            <p className="text-sm text-gray-500">Todavía no tenés grupo familiar.</p>
+          )}
+        </DashboardWidgetCard>
+
+        <DashboardWidgetCard
+          title="Membresía"
+          icon={CreditCard}
+          footer={
+            <Link to="/memberships" className="text-sm font-medium hover:underline" style={{ color: 'var(--color-primary)' }}>
+              Ver membresía
+            </Link>
+          }
+        >
+          {membership ? (
+            <div className="space-y-1">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-sm font-medium text-gray-900">{membership.plan?.title ?? 'Plan'}</p>
+                <StatusPill status={membership.status} />
+              </div>
+              <p className="text-sm text-gray-600">
+                <PaymentAmount amountCents={membership.plan?.amount ?? 0} />
+                {membership.plan?.recurrence ? ` · ${recurrenceLabel(membership.plan.recurrence)}` : ''}
+              </p>
+              {membership.date_end && (
+                <p className="text-xs text-gray-500">Vigente hasta {formatDate(membership.date_end)}</p>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-500">Sin membresía activa.</p>
+          )}
+        </DashboardWidgetCard>
+
+        <DashboardWidgetCard
+          title="Próximo cobro"
+          icon={CalendarDays}
+          footer={
+            <Link to="/recurring-payments" className="text-sm font-medium hover:underline" style={{ color: 'var(--color-primary)' }}>
+              Gestionar suscripción
+            </Link>
+          }
+        >
+          {nextCharge ? (
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-gray-900">
+                <PaymentAmount amountCents={nextCharge.amount} currency={nextCharge.currency} />
+              </p>
+              <p className="text-xs text-gray-500">{formatDate(nextCharge.next_due_at)}</p>
+              {nextCharge.payment_method && (
+                <p className="text-xs text-gray-500 capitalize">
+                  {nextCharge.payment_method.brand} •••• {nextCharge.payment_method.last_four}
+                </p>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-500">No tenés cobros programados.</p>
+          )}
+        </DashboardWidgetCard>
+
+        <DashboardWidgetCard
+          title="Pagos"
+          icon={Receipt}
+          footer={
+            <Link to="/payments" className="text-sm font-medium hover:underline" style={{ color: 'var(--color-primary)' }}>
+              Ver pagos
+            </Link>
+          }
+        >
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-gray-900">
+              Este mes: <PaymentAmount amountCents={payments?.month_amount ?? 0} />
+            </p>
+            {payments?.last_payment ? (
+              <p className="text-xs text-gray-500">Último cobro: {formatDate(payments.last_payment.created_at)}</p>
+            ) : (
+              <p className="text-xs text-gray-500">Sin movimientos este mes.</p>
+            )}
+            {failedRecent > 0 && (
+              <p className="text-xs font-medium text-red-600">
+                {failedRecent} {failedRecent === 1 ? 'cobro fallido reciente' : 'cobros fallidos recientes'}
+              </p>
+            )}
+          </div>
+        </DashboardWidgetCard>
+      </div>
+
       {/* Shortcuts */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {shortcuts.map((shortcut) => (
@@ -172,111 +291,65 @@ export function DashboardPage() {
   );
 }
 
-export function ProfilePage() {
-  const { user, isLoading } = useAuth();
-
-  if (isLoading || !user) {
-    return (
-      <div className="flex justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: 'var(--color-primary)' }} />
-      </div>
-    );
-  }
-
-  const initials = `${user.name.charAt(0)}${user.last_name ? user.last_name.charAt(0) : ''}`.toUpperCase();
-
-  const memberSince = new Date(user.created_at).toLocaleDateString('es-AR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-
-  const statusConfig = {
-    active: { label: 'Activo', className: 'bg-green-100 text-green-700' },
-    inactive: { label: 'Inactivo', className: 'bg-gray-100 text-gray-600' },
-    suspended: { label: 'Suspendido', className: 'bg-red-100 text-red-700' },
-  } as const;
-
-  const status = statusConfig[user.status];
-
+function DashboardWidgetCard({ title, icon: Icon, children, footer }: { title: string; icon: LucideIcon; children: ReactNode; footer?: ReactNode }) {
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Mi perfil</h1>
-        <p className="text-sm text-gray-500 mt-1">Tus datos personales y de cuenta</p>
+    <div className="bg-white border border-gray-200 rounded-xl p-5 flex flex-col gap-3">
+      <div className="flex items-center gap-2">
+        <Icon className="w-4 h-4" style={{ color: 'var(--color-primary)' }} />
+        <h3 className="font-semibold text-gray-900">{title}</h3>
       </div>
-
-      {/* Identity card */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6 flex items-center gap-4">
-        {user.avatar ? (
-          <img src={user.avatar} alt="Avatar" className="h-16 w-16 rounded-full object-cover" />
-        ) : (
-          <div
-            className="h-16 w-16 rounded-full flex items-center justify-center text-xl font-bold text-white shrink-0"
-            style={{ backgroundColor: 'var(--color-primary)' }}
-          >
-            {initials}
-          </div>
-        )}
-        <div className="min-w-0">
-          <h2 className="text-lg font-semibold text-gray-900 truncate">
-            {user.name} {user.last_name}
-          </h2>
-          <p className="text-sm text-gray-500 truncate">{user.email}</p>
-          <span className={`inline-block mt-2 text-xs font-medium px-2 py-0.5 rounded-full ${status.className}`}>
-            {status.label}
-          </span>
-        </div>
-      </div>
-
-      {/* Personal data */}
-      <section className="bg-white border border-gray-200 rounded-xl p-6">
-        <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Datos personales</h3>
-        <dl className="mt-4 space-y-4">
-          <ProfileField icon={User} label="Nombre">
-            {user.name}
-          </ProfileField>
-          <ProfileField icon={User} label="Apellido">
-            {user.last_name}
-          </ProfileField>
-          <ProfileField icon={Mail} label="Email">
-            {user.email}
-          </ProfileField>
-          <ProfileField icon={Phone} label="Teléfono">
-            {user.phone ?? '—'}
-          </ProfileField>
-        </dl>
-      </section>
-
-      {/* Account */}
-      <section className="bg-white border border-gray-200 rounded-xl p-6">
-        <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Cuenta</h3>
-        <dl className="mt-4 space-y-4">
-          <ProfileField icon={BadgeCheck} label="Verificación de email">
-            {user.email_verified_at ? 'Verificado' : 'Pendiente de verificación'}
-          </ProfileField>
-          <ProfileField icon={CalendarDays} label="Miembro desde">
-            {memberSince}
-          </ProfileField>
-          <ProfileField icon={ShieldCheck} label="Estado de la cuenta">
-            {status.label}
-          </ProfileField>
-        </dl>
-      </section>
+      <div className="flex-1">{children}</div>
+      {footer}
     </div>
   );
 }
 
-function ProfileField({ icon: Icon, label, children }: { icon: LucideIcon; label: string; children: ReactNode }) {
+function StatusPill({ status }: { status: string }) {
+  const config: Record<string, { label: string; className: string }> = {
+    active: { label: 'Activa', className: 'bg-green-100 text-green-700' },
+    suspended: { label: 'Suspendida', className: 'bg-red-100 text-red-700' },
+    expired: { label: 'Vencida', className: 'bg-gray-100 text-gray-600' },
+    cancelled: { label: 'Cancelada', className: 'bg-gray-100 text-gray-600' },
+  };
+  const resolved = config[status] ?? { label: status, className: 'bg-gray-100 text-gray-600' };
+
   return (
-    <div className="flex items-start gap-3">
-      <Icon className="w-5 h-5 mt-0.5 shrink-0" style={{ color: 'var(--color-primary)' }} />
-      <div className="flex-1 min-w-0">
-        <dt className="text-xs text-gray-500">{label}</dt>
-        <dd className="text-sm font-medium text-gray-900 mt-0.5 break-words">{children}</dd>
-      </div>
-    </div>
+    <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full ${resolved.className}`}>
+      {resolved.label}
+    </span>
   );
+}
+
+function membershipStatusLabel(status: string): string {
+  const config: Record<string, string> = {
+    active: 'Activa',
+    suspended: 'Suspendida',
+    expired: 'Vencida',
+    cancelled: 'Cancelada',
+  };
+
+  return config[status] ?? status;
+}
+
+function recurrenceLabel(recurrence: string): string {
+  const config: Record<string, string> = {
+    monthly: 'mensual',
+    quarterly: 'trimestral',
+    semester: 'semestral',
+    yearly: 'anual',
+  };
+
+  return config[recurrence] ?? recurrence;
+}
+
+function formatDate(value: string): string {
+  const [year, month, day] = (value.split('T')[0] ?? '').split('-');
+
+  return new Date(Number(year), Number(month) - 1, Number(day)).toLocaleDateString('es-AR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
 }
 
 export function NotFoundPage() {

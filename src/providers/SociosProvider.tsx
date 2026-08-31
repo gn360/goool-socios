@@ -8,6 +8,7 @@ import type { AxiosInstance } from 'axios';
 import {
   createAuthApiClient,
   PaymentApiService,
+  SociosProfileApiService,
   TokenManager,
   LocalStorageAuthStorage,
 } from '@goool/sdk';
@@ -19,6 +20,7 @@ import { AUTH_CONFIG } from '@/config/auth';
 interface SociosServices {
   client: AxiosInstance;
   payments: PaymentApiService;
+  profile: SociosProfileApiService;
 }
 
 const ServicesContext = createContext<SociosServices | null>(null);
@@ -47,8 +49,9 @@ export function SociosProvider({ children }: SociosProviderProps) {
     });
 
     const payments = new PaymentApiService(client, 'socios');
+    const profile = new SociosProfileApiService(client, 'socios');
 
-    return { client, payments };
+    return { client, payments, profile };
   }, []);
 
   return (
@@ -70,8 +73,12 @@ function useServices(): SociosServices {
   return ctx;
 }
 
-export function useSociosApi(): { client: AxiosInstance; payments: PaymentApiService } {
+export function useSociosApi(): {
+  client: AxiosInstance;
+  payments: PaymentApiService;
+  profile: SociosProfileApiService;
+} {
   const services = useServices();
 
-  return { client: services.client, payments: services.payments };
+  return { client: services.client, payments: services.payments, profile: services.profile };
 }

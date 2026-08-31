@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
 import { useAuth, useTheme } from '@goool/sdk';
 import { Button } from '@goool/sdk';
-import { LogOut, Menu, X, LayoutDashboard, Users, CreditCard, Receipt, User } from 'lucide-react';
+import { LogOut, Menu, X, LayoutDashboard, Users, CreditCard, Receipt, User, Bell } from 'lucide-react';
 import { APP_NAME } from '@/config/app';
 
 const NAV_ITEMS = [
@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { to: '/family', label: 'Mi grupo', icon: Users },
   { to: '/memberships', label: 'Membresías', icon: CreditCard },
   { to: '/payments', label: 'Pagos', icon: Receipt },
+  { to: '/notifications', label: 'Notificaciones', icon: Bell },
   { to: '/profile', label: 'Mi perfil', icon: User },
 ];
 

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
+import { useSociosMemberships } from '@goool/sdk';
 import { useSociosApi } from '@/providers/SociosProvider';
 
 export function RecurringPaymentsPage() {
@@ -63,13 +64,18 @@ export function RecurringPaymentsPage() {
 }
 
 function CreateRecurringForm({ onSuccess }: { onSuccess: () => void }) {
-  const { payments } = useSociosApi();
+  const { payments, client } = useSociosApi();
   const { data: methods } = useQuery({
     queryKey: ['payment-methods'],
     queryFn: () => payments.listPaymentMethods(),
   });
+  const memberships = useSociosMemberships(client, 'socios');
   const [form, setForm] = useState({ payment_method_id: '', membership_id: '', frequency: 'monthly' });
   const [submitting, setSubmitting] = useState(false);
+
+  const eligible = (memberships.data ?? []).filter(
+    (m) => m.status === 'active' && (m.plan?.amount ?? 0) > 0,
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); setSubmitting(true);
@@ -93,8 +99,21 @@ function CreateRecurringForm({ onSuccess }: { onSuccess: () => void }) {
         </select>
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">ID de membresía</label>
-        <input type="number" value={form.membership_id} onChange={(e) => setForm({ ...form, membership_id: e.target.value })} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" required />
+        <label className="block text-sm font-medium text-gray-700 mb-1">Membresía</label>
+        {eligible.length > 0 ? (
+          <select value={form.membership_id} onChange={(e) => setForm({ ...form, membership_id: e.target.value })} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" required>
+            <option value="">Seleccionar membresía</option>
+            {eligible.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.plan?.title ?? `Membresía #${m.id}`}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <p className="text-xs text-gray-500">
+            No tenés membresías activas con costo para configurar cobros automáticos.
+          </p>
+        )}
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Frecuencia</label>
@@ -102,7 +121,7 @@ function CreateRecurringForm({ onSuccess }: { onSuccess: () => void }) {
           <option value="monthly">Mensual</option><option value="quarterly">Trimestral</option><option value="semester">Semestral</option><option value="yearly">Anual</option>
         </select>
       </div>
-      <button type="submit" disabled={submitting} className="w-full py-2 text-sm font-medium rounded-lg text-white disabled:opacity-50" style={{ backgroundColor: 'var(--color-primary)' }}>{submitting ? 'Configurando...' : 'Activar pago automático'}</button>
+      <button type="submit" disabled={submitting || eligible.length === 0} className="w-full py-2 text-sm font-medium rounded-lg text-white disabled:opacity-50" style={{ backgroundColor: 'var(--color-primary)' }}>{submitting ? 'Configurando...' : 'Activar pago automático'}</button>
     </form>
   );
 }

@@ -4,11 +4,13 @@ import { AuthGuard } from '@/routes/guards/AuthGuard';
 import { AuthLayout } from '@/layouts/AuthLayout';
 import { UnauthLayout } from '@/layouts/UnauthLayout';
 import { ErrorBoundary } from '@goool/sdk';
-import { LoginPage, ForgotPasswordPage, ResetPasswordPage, DashboardPage, ProfilePage, NotFoundPage } from '@/app';
+import { LoginPage, ForgotPasswordPage, ResetPasswordPage, DashboardPage, NotFoundPage } from '@/app';
+import { ProfilePage } from '@/app/features/profile';
 import { FamilyPage } from '@/app/features/family';
 import { PaymentMethodsPage, PaymentHistoryPage, InvoiceListPage, RecurringPaymentsPage } from '@/app/features/payments';
 import { CheckoutPage, ConfirmationPage } from '@/app/features/payments';
-import { MembershipPage } from '@/app/features/membership';
+import { MembershipPage, CardPage } from '@/app/features/membership';
+import { NotificationsPage } from '@/app/features/notifications';
 
 export function Routes() {
   return (
@@ -30,6 +32,7 @@ export function Routes() {
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/memberships" element={<MembershipPage />} />
+            <Route path="/card" element={<CardPage />} />
             <Route path="/payments" element={<PaymentHistoryPage />} />
             <Route path="/payment-methods" element={<PaymentMethodsPage />} />
             <Route path="/invoices" element={<InvoiceListPage />} />
@@ -37,6 +40,7 @@ export function Routes() {
             <Route path="/checkout" element={<CheckoutPage />} />
             <Route path="/payment/confirmation" element={<ConfirmationPage />} />
             <Route path="/family" element={<FamilyPage />} />
+            <Route path="/notifications" element={<NotificationsPage />} />
           </Route>
         </Route>
 

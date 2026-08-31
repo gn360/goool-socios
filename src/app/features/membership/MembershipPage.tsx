@@ -1,13 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { MembershipCard, PaymentAmount } from '@goool/sdk';
+import { MembershipCard, PaymentAmount, useSociosMemberships } from '@goool/sdk';
 import type { MembershipOverviewDTO } from '@goool/sdk';
 import { Link } from 'react-router-dom';
-import { CreditCard, Receipt, FileText, Repeat } from 'lucide-react';
+import { CreditCard, Receipt, FileText, Repeat, BadgeCheck } from 'lucide-react';
 import { useSociosApi } from '@/providers/SociosProvider';
 
 export function MembershipPage() {
   const { client } = useSociosApi();
   const queryClient = useQueryClient();
+  const memberships = useSociosMemberships(client, 'socios');
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['membership-overview'],
@@ -86,6 +87,44 @@ export function MembershipPage() {
         resuming={resumeMutation.isPending}
       />
 
+      {/* Virtual card shortcut */}
+      <Link to="/card" className="bg-white border border-gray-200 rounded-xl p-5 hover:border-[var(--color-primary)] transition-all flex items-center gap-4">
+        <BadgeCheck className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
+        <div className="flex-1">
+          <h3 className="font-semibold text-gray-900">Mi carnet de socio</h3>
+          <p className="text-sm text-gray-500 mt-0.5">Presentá tu carnet virtual en el club</p>
+        </div>
+        <span className="text-sm font-medium" style={{ color: 'var(--color-primary)' }}>Ver carnet</span>
+      </Link>
+
+      {/* Memberships list (when more than one) */}
+      {(memberships.data?.length ?? 0) > 1 && (
+        <div className="bg-white border rounded-xl overflow-hidden">
+          <div className="px-4 py-3 border-b bg-gray-50">
+            <h2 className="text-sm font-medium text-gray-500">Todas mis membresías</h2>
+          </div>
+          <ul className="divide-y">
+            {memberships.data!.map((item) => (
+              <li key={item.id} className="px-4 py-3 flex items-center justify-between text-sm">
+                <div>
+                  <p className="font-medium text-gray-900">{item.plan?.title ?? 'Sin plan'}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {item.date_start ? formatMembershipDate(item.date_start) : '—'} → {item.date_end ? formatMembershipDate(item.date_end) : '—'}
+                  </p>
+                </div>
+                <span
+                  className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                    item.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                  }`}
+                >
+                  {membershipStatusLabel(item.status)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Link to="/recurring-payments" className="bg-white border border-gray-200 rounded-xl p-5 hover:border-[var(--color-primary)] transition-all flex items-center gap-4">
           <Repeat className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
@@ -142,4 +181,25 @@ export function MembershipPage() {
       </div>
     </div>
   );
+}
+
+function membershipStatusLabel(status: string): string {
+  const config: Record<string, string> = {
+    active: 'Activa',
+    suspended: 'Suspendida',
+    expired: 'Vencida',
+    cancelled: 'Cancelada',
+  };
+
+  return config[status] ?? status;
+}
+
+function formatMembershipDate(value: string): string {
+  const [year, month, day] = value.split('-');
+
+  return new Date(Number(year), Number(month) - 1, Number(day)).toLocaleDateString('es-AR', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
 }

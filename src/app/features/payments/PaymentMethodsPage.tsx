@@ -1,11 +1,13 @@
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { PaymentMethodCard, type CreatePaymentMethodInput } from '@goool/sdk';
+import { PaymentMethodCard, Button, InputField, type CreatePaymentMethodInput } from '@goool/sdk';
 import { useSociosApi } from '@/providers/SociosProvider';
+import { cardSchema, type CardFormData } from './schemas';
 
 export function PaymentMethodsPage() {
   const { payments } = useSociosApi();
-  const { data: methods, isLoading, refetch } = useQuery({
+  const { data: methods, isLoading, error, refetch } = useQuery({
     queryKey: ['payment-methods'],
     queryFn: () => payments.listPaymentMethods(),
   });
@@ -30,6 +32,14 @@ export function PaymentMethodsPage() {
     );
   }
 
+  if (error) {
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+        <p className="text-red-700 text-sm">Error al cargar los métodos de pago.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -47,6 +57,17 @@ export function PaymentMethodsPage() {
       </div>
 
       {showAddForm && <AddCardForm onSuccess={() => { setShowAddForm(false); refetch(); }} />}
+
+      {removeMutation.isError && (
+        <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">
+          No se pudo eliminar la tarjeta.
+        </div>
+      )}
+      {setDefaultMutation.isError && (
+        <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">
+          No se pudo cambiar la tarjeta principal.
+        </div>
+      )}
 
       {!methods?.length ? (
         <div className="bg-white border border-dashed border-gray-300 rounded-xl p-12 text-center">
@@ -75,34 +96,107 @@ export function PaymentMethodsPage() {
 
 function AddCardForm({ onSuccess }: { onSuccess: () => void }) {
   const { payments } = useSociosApi();
-  const [form, setForm] = useState<CreatePaymentMethodInput>({ card_number: '', card_holder: '', expiration_month: '', expiration_year: '', cvv: '' });
-  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitting(true);
-    try {
-      await payments.createPaymentMethod(form);
+  const {
+    register,
+    handleSubmit,
+    setError: setFieldError,
+    formState: { errors },
+  } = useForm<CardFormData>({
+    defaultValues: {
+      card_holder: '',
+      card_number: '',
+      expiration_month: '',
+      expiration_year: '',
+      cvv: '',
+    },
+  });
+
+  const submitMutation = useMutation({
+    mutationFn: (input: CreatePaymentMethodInput) => payments.createPaymentMethod(input),
+    onSuccess: () => {
+      setError('');
       onSuccess();
-    } finally { setSubmitting(false); }
+    },
+    onError: (err: unknown) => {
+      setError(
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+          'No se pudo guardar la tarjeta. Verificá los datos e intentá nuevamente.',
+      );
+    },
+  });
+
+  const onFormSubmit = (data: CardFormData) => {
+    const result = cardSchema.safeParse(data);
+
+    if (!result.success) {
+      for (const issue of result.error.issues) {
+        const path = issue.path[0] as keyof CardFormData;
+
+        setFieldError(path, { type: 'manual', message: issue.message });
+      }
+      return;
+    }
+
+    submitMutation.mutate(result.data);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Titular de la tarjeta</label>
-        <input type="text" value={form.card_holder} onChange={(e) => setForm({ ...form, card_holder: e.target.value })} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" required />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Número de tarjeta</label>
-        <input type="text" value={form.card_number} onChange={(e) => setForm({ ...form, card_number: e.target.value })} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" maxLength={19} required />
-      </div>
+    <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4 bg-white border rounded-xl p-5" noValidate>
+      <InputField
+        label="Titular de la tarjeta"
+        {...register('card_holder')}
+        error={errors.card_holder?.message}
+        placeholder="Nombre como figura en la tarjeta"
+        disabled={submitMutation.isPending}
+      />
+
+      <InputField
+        label="Número de tarjeta"
+        {...register('card_number')}
+        error={errors.card_number?.message}
+        placeholder="1234 5678 9012 3456"
+        maxLength={19}
+        disabled={submitMutation.isPending}
+      />
+
       <div className="grid grid-cols-3 gap-3">
-        <div><label className="block text-sm font-medium text-gray-700 mb-1">Mes</label><input type="text" placeholder="MM" value={form.expiration_month} onChange={(e) => setForm({ ...form, expiration_month: e.target.value })} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" maxLength={2} required /></div>
-        <div><label className="block text-sm font-medium text-gray-700 mb-1">Año</label><input type="text" placeholder="YYYY" value={form.expiration_year} onChange={(e) => setForm({ ...form, expiration_year: e.target.value })} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" maxLength={4} required /></div>
-        <div><label className="block text-sm font-medium text-gray-700 mb-1">CVV</label><input type="text" value={form.cvv} onChange={(e) => setForm({ ...form, cvv: e.target.value })} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" maxLength={4} required /></div>
+        <InputField
+          label="Mes"
+          {...register('expiration_month')}
+          error={errors.expiration_month?.message}
+          placeholder="MM"
+          maxLength={2}
+          disabled={submitMutation.isPending}
+        />
+        <InputField
+          label="Año"
+          {...register('expiration_year')}
+          error={errors.expiration_year?.message}
+          placeholder="YYYY"
+          maxLength={4}
+          disabled={submitMutation.isPending}
+        />
+        <InputField
+          label="CVV"
+          {...register('cvv')}
+          error={errors.cvv?.message}
+          placeholder="123"
+          maxLength={4}
+          disabled={submitMutation.isPending}
+        />
       </div>
-      <button type="submit" disabled={submitting} className="w-full py-2 text-sm font-medium rounded-lg text-white disabled:opacity-50" style={{ backgroundColor: 'var(--color-primary)' }}>{submitting ? 'Tokenizando...' : 'Guardar tarjeta'}</button>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">
+          {error}
+        </div>
+      )}
+
+      <Button type="submit" variant="primary" className="w-full" loading={submitMutation.isPending}>
+        Guardar tarjeta
+      </Button>
     </form>
   );
 }
