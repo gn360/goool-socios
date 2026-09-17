@@ -109,9 +109,6 @@ export function DashboardPage() {
   const failedRecent = payments?.failed_recent ?? 0;
 
   const shortcuts = [
-    { id: 'family', label: 'Mi grupo', path: '/family', icon: '👨‍👩‍👧‍👦', badge: familyCount > 0 ? `${activeCount}/${familyCount}` : null },
-    { id: 'memberships', label: 'Mis membresías', path: '/memberships', icon: '🪪', badge: membership ? membershipStatusLabel(membership.status) : null },
-    { id: 'payments', label: 'Mis pagos', path: '/payments', icon: '💳', badge: failedRecent > 0 ? `${failedRecent} fallidos` : null },
     { id: 'profile', label: 'Mi perfil', path: '/profile', icon: '👤', badge: null },
   ];
 
@@ -318,17 +315,6 @@ function StatusPill({ status }: { status: string }) {
       {resolved.label}
     </span>
   );
-}
-
-function membershipStatusLabel(status: string): string {
-  const config: Record<string, string> = {
-    active: 'Activa',
-    suspended: 'Suspendida',
-    expired: 'Vencida',
-    cancelled: 'Cancelada',
-  };
-
-  return config[status] ?? status;
 }
 
 function recurrenceLabel(recurrence: string): string {
